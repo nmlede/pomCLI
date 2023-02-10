@@ -1,0 +1,81 @@
+#!/bin/bash
+
+#POMODORO CLI
+
+# CONFIGS
+CONFIG=$PWD"/config/"
+TIMER="timer.sh"
+BANNER="banner.sh"
+COLORS="colors.sh"
+source $CONFIG$COLORS
+
+# VARIABLES asignadas mediante flags
+while getopts f:c:d: flag
+do
+    case "${flag}" in
+        f) pom_time_input=${OPTARG};; # Duracion de un ciclo
+        c) pom_repeat_input=${OPTARG};; # Cantidad de ciclos
+        d) pom_break_input=${OPTARG};; # Duracion de los descansos
+        *) echo "Opcion invalida: -$flag";;
+    esac
+done
+
+acum_focus=0
+acum_rest=0
+
+# PROGRAMA
+$CONFIG"./"$BANNER
+
+echo -e "${green}[INFO]${clear} Tiempo de ciclo Pomodoro: $pom_time_input minutos"
+echo -e "${green}[INFO]${clear} Cantidad de ciclos: $pom_repeat_input"
+echo -e "${green}[INFO]${clear} Duracion de descansos: $pom_break_input minutos"
+    
+# Bucle de repeticiones
+i=1
+for ciclos in $(seq $i $pom_repeat_input)
+do
+    echo "Inicio ciclo $i de $pom_repeat_input"
+    echo "Hora de inicio: $(date +%H:%M)"
+    
+    # Inicio focus
+    echo -e "${red}FOCUS${clear}" 
+    minutos_inicio=$(date +%M)    
+    j=1
+    for minuto in $(seq $j $pom_time_input) # seq inicio fin - setear secuencias numericas similar a range
+    do
+        echo "Minuto $j" # Debug temporal
+        # sleep 60 # en segundos
+        $CONFIG"./"$TIMER
+        echo 
+        j=$((j+1))
+    done
+    echo "se ha cumplido un ciclo de $pom_time_input minutos"
+    minutos_fin=$(date +%M)
+    minutos_acumulados=$((minutos_fin-minutos_inicio))
+    acum_focus=$((acum_focus+minutos_acumulados)) 
+    # Fin focus
+
+    # Inicio descanso
+    echo "Inicio descanso $i de $pom_repeat_input"
+    echo -e "${green}DESCANSO${clear}"
+    minutos_inicio=$(date +%M)
+    k=1
+    for minutos in $(seq $k $pom_break_input)
+    do    
+        echo "Minuto $k"
+        # sleep 60
+        $CONFIG"./"$TIMER
+        echo 
+        k=$((k+1))
+    done
+    echo "Finalizacion descanso $i"
+    minutos_fin=$(date +%M)
+    minutos_acumulados=$((minutos_fin-minutos_inicio))
+    acum_rest=$((acum_rest+minutos_acumulados))
+    # Fin descanso
+
+    i=$((i+1))
+done
+
+echo -e "${yellow}Concentracion${clear} acumulada: $acum_focus minutos"
+echo -e "${yellow}Descanso${clear} acumulado: $acum_rest minutos"
